@@ -1,0 +1,580 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [
+    {
+      "asDropdown": true,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [
+        "alert-platform"
+      ],
+      "targetBlank": false,
+      "title": "alert-platform",
+      "tooltip": "",
+      "type": "dashboards",
+      "url": ""
+    }
+  ],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "fg0vtrrqg16o0d"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "s"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "right",
+          "showLegend": true
+        },
+        "orientation": "horizontal",
+        "showValue": "never",
+        "stacking": "none",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "13.2.3",
+      "targets": [
+        {
+          "dataset": "monitoring",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "fg0vtrrqg16o0d"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT alert_type AS \"Alert type\",\n       avg(EXTRACT(EPOCH FROM cleared_at - fired_at)) AS \"Average\",\n       percentile_cont(0.5)  WITHIN GROUP (ORDER BY EXTRACT(EPOCH FROM cleared_at - fired_at)) AS \"Median\",\n       percentile_cont(0.95) WITHIN GROUP (ORDER BY EXTRACT(EPOCH FROM cleared_at - fired_at)) AS \"P95\"\nFROM alerts\nWHERE $__timeFilter(fired_at)\n  AND status IN ('cleared', 'flapping')\n  AND cleared_at IS NOT NULL\n  AND alert_type IN ($alert_type)\nGROUP BY 1\nORDER BY 2 DESC;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Time to clear by alert type",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "fg0vtrrqg16o0d"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 100,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 0,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "s"
+        }
+      },
+      "gridPos": {
+        "h": 22,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "right",
+          "showLegend": true
+        },
+        "orientation": "horizontal",
+        "showValue": "always",
+        "stacking": "normal",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "13.2.3",
+      "targets": [
+        {
+          "dataset": "monitoring",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "fg0vtrrqg16o0d"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT c.name AS \"Customer\",\n       avg(EXTRACT(EPOCH FROM a.cleared_at - a.fired_at)) AS \"Average time to clear\"\nFROM alerts a\nJOIN systems s   ON s.id = a.system_id\nJOIN customers c ON c.id = s.customer_id\nWHERE $__timeFilter(a.fired_at)\n  AND a.status IN ('cleared', 'flapping')\n  AND a.cleared_at IS NOT NULL\n  AND a.alert_type IN ($alert_type)\nGROUP BY 1\nHAVING count(*) >= 5\nORDER BY 2 DESC\nLIMIT 15;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Slowest customers to clear (top 15)",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "fg0vtrrqg16o0d"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "fillOpacity": 82,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 2,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        }
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 3,
+      "options": {
+        "bucketSize": 10,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "13.2.3",
+      "targets": [
+        {
+          "dataset": "monitoring",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "fg0vtrrqg16o0d"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT EXTRACT(EPOCH FROM cleared_at - fired_at) / 60 AS \"Minutes to clear\"\nFROM alerts\nWHERE $__timeFilter(fired_at)\n  AND status IN ('cleared', 'flapping')\n  AND cleared_at IS NOT NULL\n  AND alert_type IN ($alert_type);",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Time to clear distribution (minutes)",
+      "type": "histogram"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "fg0vtrrqg16o0d"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "mappings": [
+            {
+              "options": {
+                "critical": {
+                  "color": "dark-red",
+                  "index": 0,
+                  "text": "Critical"
+                },
+                "flapping": {
+                  "color": "dark-orange",
+                  "index": 4,
+                  "text": "Flapping"
+                },
+                "info": {
+                  "color": "dark-blue",
+                  "index": 2,
+                  "text": "Information"
+                },
+                "open": {
+                  "color": "dark-red",
+                  "index": 3,
+                  "text": "Open"
+                },
+                "suppressed": {
+                  "color": "dark-blue",
+                  "index": 5,
+                  "text": "Suppressed"
+                },
+                "suspected_false": {
+                  "color": "dark-purple",
+                  "index": 6,
+                  "text": "Suspected_false"
+                },
+                "warning": {
+                  "color": "dark-orange",
+                  "index": 1,
+                  "text": "Warning"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Open for",
+              "scope": "series"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Severity",
+              "scope": "series"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status",
+              "scope": "series"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 0,
+        "y": 17
+      },
+      "id": 4,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "pluginVersion": "13.2.3",
+      "targets": [
+        {
+          "dataset": "monitoring",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "fg0vtrrqg16o0d"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT s.sid || ' \u00b7 ' || c.name                    AS \"System\",\n       a.alert_name                                AS \"Alert\",\n       a.severity                                  AS \"Severity\",\n       a.status                                    AS \"Status\",\n       a.fired_at                                  AS \"Fired\",\n       EXTRACT(EPOCH FROM now() - a.fired_at)      AS \"Open for\"\nFROM alerts a\nJOIN systems s   ON s.id = a.system_id\nJOIN customers c ON c.id = s.customer_id\nWHERE a.cleared_at IS NULL\n  AND a.alert_type IN ($alert_type)\nORDER BY a.fired_at\nLIMIT 15;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Longest-open alerts",
+      "type": "table"
+    }
+  ],
+  "preload": false,
+  "refresh": "1m",
+  "schemaVersion": 42,
+  "tags": [
+    "alert-platform"
+  ],
+  "templating": {
+    "list": [
+      {
+        "allowCustomValue": true,
+        "current": {
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "hide": 0,
+        "includeAll": true,
+        "label": "Alert type",
+        "multi": true,
+        "name": "alert_type",
+        "options": [],
+        "query": "Availability,Performance,Capacity,Exceptions",
+        "skipUrlSync": false,
+        "type": "custom",
+        "valuesFormat": "csv"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ]
+  },
+  "timezone": "Asia/Kolkata",
+  "title": "Alert duration",
+  "version": 10,
+  "uid": "sixwm27",
+  "id": null
+}

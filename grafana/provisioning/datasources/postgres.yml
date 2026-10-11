@@ -1,0 +1,18 @@
+apiVersion: 1
+
+datasources:
+  - name: grafana-postgresql-datasource            # use your existing data source name
+    uid: fg0vtrrqg16o0d         # MUST match the uid in the dashboard JSON
+    type: grafana-postgresql-datasource
+    url: postgres:5432
+    user: ${GRAFANA_DB_USER}
+    secureJsonData:
+      password: ${GRAFANA_DB_PASSWORD}
+    jsonData:
+      database: monitoring
+      sslmode: disable
+      postgresVersion: 1600
+      timescaledb: true
+      timeInterval: 2m
+    isDefault: true
+    editable: false

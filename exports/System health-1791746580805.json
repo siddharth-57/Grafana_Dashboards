@@ -1,0 +1,870 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      },
+      {
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "fg0vtrrqg16o0d"
+        },
+        "enable": true,
+        "hide": false,
+        "iconColor": "dark-red",
+        "name": "Alerts",
+        "target": {
+          "dataset": "monitoring",
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT a.fired_at                                  AS time,\n       COALESCE(a.cleared_at, now())               AS timeend,\n       a.alert_name || ' · ' || s.sid || ' (' || a.severity || ', ' || a.status || ')' AS text\nFROM alerts a\nJOIN systems s ON s.id = a.system_id\nWHERE a.system_id IN ($system)\n  AND $__timeFilter(a.fired_at);",
+          "refId": "Anno",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [
+    {
+      "asDropdown": true,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [
+        "alert-platform"
+      ],
+      "targetBlank": false,
+      "title": "alert-platform",
+      "tooltip": "",
+      "type": "dashboards",
+      "url": ""
+    }
+  ],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "fg0vtrrqg16o0d"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "dashed"
+            }
+          },
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "dark-orange",
+                "value": 85
+              },
+              {
+                "color": "dark-red",
+                "value": 95
+              }
+            ]
+          },
+          "unit": "percent"
+        }
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "13.2.3",
+      "targets": [
+        {
+          "dataset": "monitoring",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "fg0vtrrqg16o0d"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT $__timeGroupAlias(m.collected_at, $__interval),\n       s.sid || ' ' || s.system_type AS metric,\n       $agg(m.value) AS value\nFROM metrics m\nJOIN systems s ON s.id = m.system_id\nWHERE $__timeFilter(m.collected_at)\n  AND m.metric_name = 'cpu_usage_pct'\n  AND m.system_id IN ($system)\n  AND $__timeTo()::timestamptz - $__timeFrom()::timestamptz <= interval '2 days'\nGROUP BY 1, 2\n\nUNION ALL\n\nSELECT $__timeGroupAlias(h.bucket, $__interval),\n       s.sid || ' ' || s.system_type AS metric,\n       CASE '$agg' WHEN 'max' THEN max(h.max_value)\n                   ELSE sum(h.sum_value) / sum(h.samples) END AS value\nFROM metrics_hourly h\nJOIN systems s ON s.id = h.system_id\nWHERE $__timeFilter(h.bucket)\n  AND h.metric_name = 'cpu_usage_pct'\n  AND h.system_id IN ($system)\n  AND $__timeTo()::timestamptz - $__timeFrom()::timestamptz > interval '2 days'\nGROUP BY 1, 2\n\nORDER BY 1;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "CPU usage % ($agg)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "fg0vtrrqg16o0d"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "id": 4,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "13.2.3",
+      "targets": [
+        {
+          "dataset": "monitoring",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "fg0vtrrqg16o0d"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT $__timeGroupAlias(m.collected_at, $__interval),\n       s.sid || ' ' || s.system_type AS metric,\n       sum(m.value) AS value\nFROM metrics m\nJOIN systems s ON s.id = m.system_id\nWHERE $__timeFilter(m.collected_at)\n  AND m.metric_name = 'abap_short_dumps_count'\n  AND m.system_id IN ($system)\n  AND $__timeTo()::timestamptz - $__timeFrom()::timestamptz <= interval '2 days'\nGROUP BY 1, 2\n\nUNION ALL\n\nSELECT $__timeGroupAlias(h.bucket, $__interval),\n       s.sid || ' ' || s.system_type AS metric,\n       sum(h.sum_value) AS value\nFROM metrics_hourly h\nJOIN systems s ON s.id = h.system_id\nWHERE $__timeFilter(h.bucket)\n  AND h.metric_name = 'abap_short_dumps_count'\n  AND h.system_id IN ($system)\n  AND $__timeTo()::timestamptz - $__timeFrom()::timestamptz > interval '2 days'\nGROUP BY 1, 2\n\nORDER BY 1;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "ABAP short dumps (per interval)",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "fg0vtrrqg16o0d"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "fillOpacity": 70,
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineWidth": 0,
+            "spanNulls": false
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "dark-red",
+                  "index": 1,
+                  "text": "Down"
+                },
+                "1": {
+                  "color": "dark-green",
+                  "index": 0,
+                  "text": "Up"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Time",
+              "scope": "series"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": []
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "id": 5,
+      "options": {
+        "alignValue": "left",
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "mergeValues": true,
+        "rowHeight": 0.9,
+        "showValue": "auto",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "13.2.3",
+      "targets": [
+        {
+          "dataset": "monitoring",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "fg0vtrrqg16o0d"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT $__timeGroupAlias(m.collected_at, $__interval),\n       s.sid || ' ' || s.system_type || ' · ' ||\n         replace(m.metric_name, '_available', '') AS metric,\n       min(m.value) AS value\nFROM metrics m\nJOIN systems s ON s.id = m.system_id\nWHERE $__timeFilter(m.collected_at)\n  AND m.metric_name IN ('system_available', 'instance_available',\n                        'db_available', 'db_replication_in_sync')\n  AND m.system_id IN ($system)\n  AND $__timeTo()::timestamptz - $__timeFrom()::timestamptz <= interval '2 days'\nGROUP BY 1, 2\n\nUNION ALL\n\nSELECT $__timeGroupAlias(h.bucket, $__interval),\n       s.sid || ' ' || s.system_type || ' · ' ||\n         replace(h.metric_name, '_available', '') AS metric,\n       min(h.min_value) AS value\nFROM metrics_hourly h\nJOIN systems s ON s.id = h.system_id\nWHERE $__timeFilter(h.bucket)\n  AND h.metric_name IN ('system_available', 'instance_available',\n                        'db_available', 'db_replication_in_sync')\n  AND h.system_id IN ($system)\n  AND $__timeTo()::timestamptz - $__timeFrom()::timestamptz > interval '2 days'\nGROUP BY 1, 2\n\nORDER BY 1;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Availability",
+      "type": "state-timeline"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "fg0vtrrqg16o0d"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "dashed"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "dark-orange",
+                "value": 1500
+              },
+              {
+                "color": "dark-red",
+                "value": 3000
+              }
+            ]
+          },
+          "unit": "ms"
+        }
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 26
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "13.2.3",
+      "targets": [
+        {
+          "dataset": "monitoring",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "fg0vtrrqg16o0d"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT $__timeGroupAlias(m.collected_at, $__interval),\n       s.sid || ' ' || s.system_type || ' · ' ||\n         CASE m.metric_name WHEN 'dialog_response_time_ms' THEN 'dialog' ELSE 'update' END AS metric,\n       $agg(m.value) AS value\nFROM metrics m\nJOIN systems s ON s.id = m.system_id\nWHERE $__timeFilter(m.collected_at)\n  AND m.metric_name IN ('dialog_response_time_ms', 'update_response_time_ms')\n  AND m.system_id IN ($system)\n  AND $__timeTo()::timestamptz - $__timeFrom()::timestamptz <= interval '2 days'\nGROUP BY 1, 2\n\nUNION ALL\n\nSELECT $__timeGroupAlias(h.bucket, $__interval),\n       s.sid || ' ' || s.system_type || ' · ' ||\n         CASE h.metric_name WHEN 'dialog_response_time_ms' THEN 'dialog' ELSE 'update' END AS metric,\n       CASE '$agg' WHEN 'max' THEN max(h.max_value)\n                   ELSE sum(h.sum_value) / sum(h.samples) END AS value\nFROM metrics_hourly h\nJOIN systems s ON s.id = h.system_id\nWHERE $__timeFilter(h.bucket)\n  AND h.metric_name IN ('dialog_response_time_ms', 'update_response_time_ms')\n  AND h.system_id IN ($system)\n  AND $__timeTo()::timestamptz - $__timeFrom()::timestamptz > interval '2 days'\nGROUP BY 1, 2\n\nORDER BY 1;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Response times ($agg)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "fg0vtrrqg16o0d"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "dashed"
+            }
+          },
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "dark-orange",
+                "value": 85
+              },
+              {
+                "color": "dark-red",
+                "value": 95
+              }
+            ]
+          },
+          "unit": "percent"
+        }
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 35
+      },
+      "id": 2,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "13.2.3",
+      "targets": [
+        {
+          "dataset": "monitoring",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "fg0vtrrqg16o0d"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT $__timeGroupAlias(m.collected_at, $__interval),\n       s.sid || ' ' || s.system_type AS metric,\n       $agg(m.value) AS value\nFROM metrics m\nJOIN systems s ON s.id = m.system_id\nWHERE $__timeFilter(m.collected_at)\n  AND m.metric_name = 'filesystem_usage_pct'\n  AND m.system_id IN ($system)\n  AND $__timeTo()::timestamptz - $__timeFrom()::timestamptz <= interval '2 days'\nGROUP BY 1, 2\n\nUNION ALL\n\nSELECT $__timeGroupAlias(h.bucket, $__interval),\n       s.sid || ' ' || s.system_type AS metric,\n       CASE '$agg' WHEN 'max' THEN max(h.max_value)\n                   ELSE sum(h.sum_value) / sum(h.samples) END AS value\nFROM metrics_hourly h\nJOIN systems s ON s.id = h.system_id\nWHERE $__timeFilter(h.bucket)\n  AND h.metric_name = 'filesystem_usage_pct'\n  AND h.system_id IN ($system)\n  AND $__timeTo()::timestamptz - $__timeFrom()::timestamptz > interval '2 days'\nGROUP BY 1, 2\n\nORDER BY 1;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Filesystem usage % ($agg)",
+      "type": "timeseries"
+    }
+  ],
+  "preload": false,
+  "refresh": "1m",
+  "schemaVersion": 42,
+  "tags": [
+    "alert-platform"
+  ],
+  "templating": {
+    "list": [
+      {
+        "allowCustomValue": true,
+        "current": {
+          "text": "Team Alpha",
+          "value": "1"
+        },
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "fg0vtrrqg16o0d"
+        },
+        "definition": "SELECT name AS __text, id AS __value FROM groups ORDER BY name;",
+        "hide": 0,
+        "includeAll": true,
+        "label": "group",
+        "multi": true,
+        "name": "group",
+        "options": [],
+        "query": {
+          "dataset": "monitoring",
+          "editorMode": "code",
+          "format": "table",
+          "query": "SELECT name AS __text, id AS __value FROM groups ORDER BY name;",
+          "rawQuery": true,
+          "rawSql": "SELECT name AS __text, id AS __value FROM groups ORDER BY name;",
+          "refId": "SQLVariableQueryEditor-VariableQuery",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        "refresh": 1,
+        "regex": "",
+        "regexApplyTo": "value",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "allowCustomValue": true,
+        "current": {
+          "text": "Adams, Zuniga and Wong",
+          "value": "19"
+        },
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "fg0vtrrqg16o0d"
+        },
+        "definition": "SELECT name AS __text, id AS __value FROM customers WHERE group_id IN ($group) ORDER BY name;",
+        "hide": 0,
+        "includeAll": false,
+        "label": "customer",
+        "multi": false,
+        "name": "customer",
+        "options": [],
+        "query": {
+          "dataset": "monitoring",
+          "editorMode": "code",
+          "format": "table",
+          "query": "SELECT name AS __text, id AS __value FROM customers WHERE group_id IN ($group) ORDER BY name;",
+          "rawQuery": true,
+          "rawSql": "SELECT name AS __text, id AS __value FROM customers WHERE group_id IN ($group) ORDER BY name;",
+          "refId": "SQLVariableQueryEditor-VariableQuery",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        "refresh": 1,
+        "regex": "",
+        "regexApplyTo": "value",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "allowCustomValue": true,
+        "current": {
+          "text": "FKD (DEV)",
+          "value": "57"
+        },
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "fg0vtrrqg16o0d"
+        },
+        "definition": "SELECT sid || ' (' || system_type || ')' AS __text, id AS __value FROM systems WHERE customer_id IN ($customer) ORDER BY system_type;",
+        "hide": 0,
+        "includeAll": true,
+        "label": "system",
+        "multi": true,
+        "name": "system",
+        "options": [],
+        "query": {
+          "dataset": "monitoring",
+          "editorMode": "code",
+          "format": "table",
+          "query": "SELECT sid || ' (' || system_type || ')' AS __text, id AS __value FROM systems WHERE customer_id IN ($customer) ORDER BY system_type;",
+          "rawQuery": true,
+          "rawSql": "SELECT sid || ' (' || system_type || ')' AS __text, id AS __value FROM systems WHERE customer_id IN ($customer) ORDER BY system_type;",
+          "refId": "SQLVariableQueryEditor-VariableQuery",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        "refresh": 1,
+        "regex": "",
+        "regexApplyTo": "value",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "allowCustomValue": true,
+        "current": {
+          "text": "max",
+          "value": "max"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "agg",
+        "multi": false,
+        "name": "agg",
+        "options": [],
+        "query": "max,avg",
+        "skipUrlSync": false,
+        "type": "custom",
+        "valuesFormat": "csv"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ]
+  },
+  "timezone": "Asia/Kolkata",
+  "title": "System health",
+  "version": 23,
+  "uid": "si5qjsh",
+  "id": 1594790230425600
+}
